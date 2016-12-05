@@ -26,8 +26,8 @@
 #include "gauss_integral.h"
 
 // Definition of the integral equation to be solved
-//#include "ex1.c" // Example 1
-#include "prob1.c" // Exersise 8.1 (1)
+#include "ex1.c" // Example 1
+//#include "prob1.c" // Exersise 8.1 (1)
 //#include "prob2.c" // Exersise 8.1 (2)
 
 // difference: [u, v; F]
@@ -356,7 +356,7 @@ int main(int argc, char *argv[])
 	itimes = derivative_free_iteration_dvector(dvec_ans, dvec_u, dvec_v, vf_index, vf, dim, 1.0e-10, 1.0e-50, dim * 2);
 	end_time = get_real_secv() - start_time;
 
-	//printf("dvec_ans: \n");	printf_dvector("%5d, %25.17e\n", dvec_ans, dim, 1);
+	printf("dvec_ans: \n");	printf_dvector2("%5d, %25.17e, %25.17e\n", dvec_abscissa, dvec_ans, dim, 1);
 	printf("elapsed time(s): %f\n", end_time);
 
 	free(dvec_u);
