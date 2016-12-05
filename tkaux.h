@@ -39,6 +39,9 @@ extern "C" {
 // printf_dvector(format, dvec, dim, interval -> printf(format, index, dvec[index + interval])
 void printf_dvector(const char *, double *, int, int);
 
+// printf_dvecto2r -> printf(format, index, dvec1[index], dvec2[index])
+void printf_dvector2(const char *, double *, double *, int, int);
+
 // zero clear
 void set0_dvector(double *, int, int);
 

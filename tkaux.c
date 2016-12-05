@@ -17,6 +17,7 @@
 /*                                                                              */
 /********************************************************************************/
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 
 #include "tkaux.h"
@@ -28,6 +29,15 @@ void printf_dvector(const char *format, double *dvec, int dim_dvec, int inc_dvec
 
 	for(index = 0; index < dim_dvec; index += inc_dvec)
 		printf(format, index, dvec[index]);
+}
+
+// printf_dvecto2r -> printf(format, index, dvec1[index], dvec2[index])
+void printf_dvector2(const char *format, double *dvec1, double *dvec2, int dim_dvec, int inc_dvec)
+{
+	int index;
+
+	for(index = 0; index < dim_dvec; index += inc_dvec)
+		printf(format, index, dvec1[index], dvec2[index]);
 }
 
 // zero clear
