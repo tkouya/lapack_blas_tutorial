@@ -1,10 +1,11 @@
-============================================================
 LAPACK/BLAS Tutorial: List of sample programs
-
- 2016-12-02 (Fri) Tomonori Kouya
 ============================================================
+
+2016-12-02 (Fri) Tomonori Kouya
+---------------------------------
 
 The following programs are published for all readers of "LAPACK/BLAS Tutorial" written in JAPANESE.
+You can read "README.ja.md"(Japanese!) if you want to get detailed description about them.
 
 *Common*  
 	lapack_gcc.inc  
