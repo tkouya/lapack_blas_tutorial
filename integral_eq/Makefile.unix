@@ -1,0 +1,36 @@
+#*************************************************#
+# LAPACK/BLAS Tutorial                            #
+# Makefile for Linux gcc or icc environment       #
+# Last Update: 2016-12-02 (Fri) T.Kouya           #
+#*************************************************#
+# Intel C compiler
+include ../lapack_icc.inc
+
+# GNU Compiler Collection
+#include ../lapack_gcc.inc
+
+all: gauss_integral
+
+get_secv: ../get_secv.h ../get_sec.c
+	$(CC) $(LAPACKE_INC) -I../ -c ../get_sec.c -o get_sec.o
+
+gauss_integral: get_secv gauss_integral.c iteration.c ../tkaux.c ../tkaux.h
+	$(CC) -DDEBUG $(LAPACKE_INC) -I../ gauss_integral.c -o gauss_integral $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) -I../ -c ../tkaux.c -o tkaux.o
+	$(CC) $(LAPACKE_INC) -I../ -c gauss_integral.c -o gauss_integral.o
+	$(CC) $(LAPACKE_INC) -I../ iteration.c gauss_integral.o tkaux.o get_sec.o -o secant $(LAPACKE_LIB)
+	$(CC) $(OPENMP) -DUSE_IMKL $(IMKL_INC) -I../ iteration.c gauss_integral.o tkaux.o get_sec.o -o secant_imkl $(IMKL_LIB)
+	$(CC) -DUSE_PARALLEL_DIFFMAT $(OPENMP) -DUSE_IMKL $(IMKL_INC) -I../ iteration.c gauss_integral.o tkaux.o get_sec.o -o secant_imkl_pd $(IMKL_LIB)
+	$(CC) -DUSE_NEW_SECANT $(LAPACKE_INC) -I../ iteration.c gauss_integral.o tkaux.o get_sec.o -o new_secant $(LAPACKE_LIB)
+	$(CC) -DUSE_NEW_SECANT $(OPENMP) -DUSE_IMKL $(IMKL_INC) -I../ iteration.c gauss_integral.o tkaux.o get_sec.o -o new_secant_imkl $(IMKL_LIB)
+	$(CC) -DUSE_PARALLEL_DIFFMAT -DUSE_NEW_SECANT $(OPENMP) -DUSE_IMKL $(IMKL_INC) -I../ iteration.c gauss_integral.o tkaux.o get_sec.o -o new_secant_imkl_pd $(IMKL_LIB)
+
+clean:
+	-rm *.o
+	-rm gauss_integral
+	-rm secant
+	-rm secant_imkl
+	-rm secant_imkl_pd
+	-rm new_secant
+	-rm new_secant_imkl
+	-rm new_secant_imkl_pd

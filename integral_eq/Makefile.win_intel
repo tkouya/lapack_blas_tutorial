@@ -1,0 +1,23 @@
+include ../lapack_win_intel.inc
+
+INC = /I..\windows
+
+all: gauss_integral
+
+get_secv: ../get_secv.h ../get_sec.c
+	$(CC) $(LAPACKE_INC) -I../ -c ../get_sec.c -o get_sec.o
+
+gauss_integral: get_secv gauss_integral.c iteration.c ../tkaux.c ../tkaux.h
+	$(CC) -DDEBUG $(LAPACKE_INC) -I../ gauss_integral.c -o gauss_integral $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) -I../ -c ../tkaux.c -o tkaux.obj
+	$(CC) $(LAPACKE_INC) -I../ -c gauss_integral.c -o gauss_integral.obj
+	$(CC) $(LAPACKE_INC) -I../ iteration.c gauss_integral.obj tkaux.obj get_sec.obj -o secant $(LAPACKE_LIB)
+	$(CC) $(OPENMP) -DUSE_IMKL $(IMKL_INC) -I../ iteration.c gauss_integral.obj tkaux.obj get_sec.obj -o secant_imkl $(IMKL_LIB)
+	$(CC) -DUSE_PARALLEL_DIFFMAT $(OPENMP) -DUSE_IMKL $(IMKL_INC) -I../ iteration.c gauss_integral.obj tkaux.obj get_sec.obj -o secant_imkl_pd $(IMKL_LIB)
+	$(CC) -DUSE_NEW_SECANT $(LAPACKE_INC) -I../ iteration.c gauss_integral.obj tkaux.obj get_sec.obj -o new_secant $(LAPACKE_LIB)
+	$(CC) -DUSE_NEW_SECANT $(OPENMP) -DUSE_IMKL $(IMKL_INC) -I../ iteration.c gauss_integral.obj tkaux.obj get_sec.obj -o new_secant_imkl $(IMKL_LIB)
+	$(CC) -DUSE_PARALLEL_DIFFMAT -DUSE_NEW_SECANT $(OPENMP) -DUSE_IMKL $(IMKL_INC) -I../ iteration.c gauss_integral.obj tkaux.obj get_sec.obj -o new_secant_imkl_pd $(IMKL_LIB)
+
+clean:
+	-del *.obj
+	-del *.exe

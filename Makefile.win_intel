@@ -1,0 +1,77 @@
+#*************************************************#
+# LAPACK/BLAS Tutorial                            #
+# Makefile for Intel C compiler on Windows        #
+# Last Update: 2016-12-02 (Fri) T.Kouya           #
+#*************************************************#
+# ------------------------ start of configuration --------------------------
+include ./lapack_win_intel.inc
+INC = /I.\windows
+# ------------------------ end of configuration --------------------------
+
+all: first matvec_mul linear_eq blas row_column_major eig spblas dgecon openmp
+
+get_sec: get_secv.h get_sec.c
+	$(CC) -c get_sec.c
+
+first: first.c complex_first.c complex_first_cpp.cc
+	$(CC) first.c
+	$(CC) complex_first.c
+	$(CPP) complex_first_cpp.cc
+
+matvec_mul: matvec_mul.c my_matvec_mul.c
+	$(CC) $(LAPACKE_INC) matvec_mul.c -o matvec_mul $(LAPACKE_LIB)
+	$(CC) my_matvec_mul.c -o my_matvec_mul
+	$(CC) $(LAPACKE_INC) complex_matvec_mul.c -o complex_matvec_mul $(LAPACKE_LIB)
+
+linear_eq: linear_eq.c my_linear_eq.c linear_eq_dgetrf.c linear_eq_dsgesv.c linear_eq_dsposv.c linear_eq_dsysv.c linear_eq_dgbsv.c invpower_eig.c
+	$(CC) $(LAPACKE_INC) linear_eq.c $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) linear_eq_dgetrf.c $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) linear_eq_dsgesv.c $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) linear_eq_dsposv.c $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) linear_eq_dsysv.c $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) linear_eq_dgbsv.c $(LAPACKE_LIB)
+	$(CC) my_linear_eq.c 
+	$(CC) $(LAPACKE_INC) invpower_eig.c $(LAPACKE_LIB)
+
+blas: blas1.c blas2.c blas3.c blas1_norm.c jacobi_iteration.c power_eig.c
+	$(CC) $(CBLAS_INC) blas1.c $(CBLAS_LIB)
+	$(CC) $(CBLAS_INC) blas1_norm.c $(CBLAS_LIB)
+	$(CC) $(CBLAS_INC) blas2.c $(CBLAS_LIB)
+	$(CC) $(CBLAS_INC) blas3.c $(CBLAS_LIB)
+	$(CC) $(CBLAS_INC) jacobi_iteration.c $(CBLAS_LIB)
+	$(CC) $(CBLAS_INC) power_eig.c $(CBLAS_LIB)
+
+row_column_major: row_column_major.c complex_row_column_major.c lapack_complex_row_column_major.c
+	$(CC) $(INC) row_column_major.c -o row_column_major $(LAPACKE_LIB)
+	$(CC) $(INC) complex_row_column_major.c -o complex_row_column_major $(LAPACKE_LIB)
+#	$(CC) $(INC) $(LAPACKE_INC) lapack_complex_row_column_major.c -o lapack_complex_row_column_major $(LAPACKE_LIB)
+
+dgecon: lapack_dgecon.c lapack_lamch.c
+	$(CC) $(INC) $(LAPACKE_INC) lapack_dgecon.c $(LAPACKE_LIB) $(CBLAS_LIB)
+	$(CC) $(INC) $(LAPACKE_INC) lapack_lamch.c $(LAPACKE_LIB) $(CBLAS_LIB)
+
+eig: lapack_dgeev.c lapack_dsyev.c lapack_ssyev.c
+	$(CC) $(LAPACKE_INC) lapack_dgeev.c tkaux.c $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) lapack_dsyev.c $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) lapack_ssyev.c $(LAPACKE_LIB)
+
+spblas: jacobi_iteration_mkl.c jacobi_iteration_csr_mkl.c bicgstab_mkl.c bicgstab_csr_mkl.c
+	$(CC) $(IMKL_INC) -DUSE_IMKL jacobi_iteration_mkl.c mm/matrix_market_io.c tkaux.c $(IMKL_LIB)
+	$(CC) $(IMKL_INC) -DUSE_IMKL jacobi_iteration_csr_mkl.c mm/matrix_market_io.c tkaux.c $(IMKL_LIB)
+	$(CC) $(IMKL_INC) -DUSE_IMKL bicgstab_mkl.c mm/matrix_market_io.c tkaux.c $(IMKL_LIB)
+	$(CC) $(IMKL_INC) -DUSE_IMKL bicgstab_csr_mkl.c mm/matrix_market_io.c tkaux.c $(IMKL_LIB)
+
+openmp: my_matvec_mul.c my_linear_eq_omp.c
+	$(CC) $(OPENMP) $(CBLAS_INC) my_matvec_mul.c -o my_matvec_mul_omp $(CBLAS_LIB)
+	$(CC) $(OPENMP) $(CBLAS_INC) my_linear_eq_omp.c -o my_linear_eq_omp $(CBLAS_LIB)
+
+clean:
+	-del *.exe
+	-del *.obj
+
+zip:
+	-del ..\lapack-dist.zip
+	cd ../
+	zip -ll -v lapack-dist.zip lapack-dist/*.txt lapack-dist/*.h lapack-dist/*.c lapack-dist/*.cc lapack-dist/Makefile.* lapack-dist/*.cu lapack-dist/*.inc lapack-dist/mm/*.h lapack-dist/mm/*.c lapack-dist/mm/*.mtx lapack-dist/integral_eq/*.c lapack-dist/integral_eq/Makefile.* lapack-dist/integral_eq/*.h lapack-dist/windows/
+	cd ./lapack-dist
+

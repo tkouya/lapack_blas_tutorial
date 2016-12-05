@@ -1,0 +1,162 @@
+#*************************************************#
+# LAPACK/BLAS Tutorial                            #
+# Makefile for Linux gcc or icc environment       #
+# Last Update: 2016-12-02 (Fri) T.Kouya           #
+#*************************************************#
+# ------------------------ start of configuration --------------------------
+# Intel C compiler
+include lapack_icc.inc
+
+# GNU Compiler Collection
+#include lapack_gcc.inc
+
+# CUDA environment
+#NVCC=nvcc
+NVCC=nvcc -arch=sm_30
+CUDA_INC = -I/usr/local/cuda/include
+#CUDA_LIB = -L/usr/local/cuda/lib64 -lcublas -lcudart -lcusparse
+CUDA_LIB = -L/usr/local/cuda/lib64 -lcusparse -lcublas -lcudart -lpthread -ldl
+
+# MAGMA 1.5.0 to 1.6.2
+#MAGMA_INC = -I/home/tkouya/pool/magma/magma-1.5.0/include
+#MAGMA_LIB = -L/home/tkouya/pool/magma/magma-1.5.0/lib -lmagma
+#MAGMA_INC = -I/home/tkouya/pool/magma/magma-1.6.0/include -I/home/tkouya/pool/magma/magma-1.6.1/sparse-iter/include -DADD_
+#MAGMA_LIB = -L/home/tkouya/pool/magma/magma-1.6.0/lib -lmagma_sparse -lmagma
+#MAGMA_INC = -I/home/tkouya/pool/lapack/magma-1.6.0/include
+#MAGMA_LIB = -L/home/tkouya/pool/lapack/magma-1.6.0/lib -lmagma
+#MAGMA_INC = -I/home/tkouya/pool/magma/magma-1.6.1/include -I/home/tkouya/pool/magma/magma-1.6.1/sparse-iter/include -O3 -fPIC -DADD_ -Wall -openmp -DMAGMA_SETAFFINITY -DMAGMA_WITH_MKL
+#MAGMA_LIB = -L/home/tkouya/pool/magma/magma-1.6.1/lib -lmagma_sparse -lmagma
+MAGMA_INC = -I/home/tkouya/pool/lapack/magma-1.6.2/include -I/home/tkouya/pool/lapack/magma-1.6.2/sparse-iter/include -O3 -fPIC -DADD_ -Wall -openmp -DMAGMA_SETAFFINITY -DMAGMA_WITH_MKL
+MAGMA_LIB = -L/home/tkouya/pool/lapack/magma-1.6.2/lib -lmagma_sparse -lmagma
+
+# ------------------------ end of configuration --------------------------
+
+all: first matvec_mul linear_eq blas row_column_major gpu eig spblas dgecon openmp pthread
+
+get_sec: get_secv.h get_sec.c
+	$(CC) -c get_sec.c -o get_sec.o
+
+tkaux: tkaux.h tkaux.c
+	$(CC) -c tkaux.c -o tkaux.o
+
+first: first.c complex_first.c complex_first_cpp.cc
+	$(CC) first.c -o first $(LIB)
+	$(CC) complex_first.c -o complex_first $(LIB)
+	$(CPP) complex_first_cpp.cc -o complex_first_cpp $(LIB)
+
+matvec_mul: matvec_mul.c my_matvec_mul.c
+	$(CC) $(LAPACKE_INC) matvec_mul.c -o matvec_mul $(LAPACKE_LIB)
+	$(CC) my_matvec_mul.c -o my_matvec_mul
+	$(CC) $(LAPACKE_INC) complex_matvec_mul.c -o complex_matvec_mul $(LAPACKE_LIB)
+
+linear_eq: linear_eq.c my_linear_eq.c linear_eq_dgetrf.c linear_eq_dsgesv.c linear_eq_dsposv.c linear_eq_dsysv.c linear_eq_dgbsv.c invpower_eig.c
+	$(CC) $(LAPACKE_INC) linear_eq.c -o linear_eq $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) linear_eq_dgetrf.c -o linear_eq_dgetrf $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) linear_eq_dsgesv.c -o linear_eq_dsgesv $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) linear_eq_dsposv.c -o linear_eq_dsposv $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) linear_eq_dsysv.c -o linear_eq_dsysv $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) linear_eq_dgbsv.c -o linear_eq_dgbsv $(LAPACKE_LIB)
+	$(CC) my_linear_eq.c -o my_linear_eq
+	$(CC) $(LAPACKE_INC) invpower_eig.c -o invpower_eig $(LAPACKE_LIB)
+
+blas: blas1.c blas2.c blas3.c blas1_norm.c jacobi_iteration.c power_eig.c
+	$(CC) $(CBLAS_INC) blas1.c -o blas1 $(CBLAS_LIB)
+	$(CC) $(CBLAS_INC) blas1_norm.c -o blas1_norm $(CBLAS_LIB)
+	$(CC) $(CBLAS_INC) blas2.c -o blas2 $(CBLAS_LIB)
+	$(CC) $(CBLAS_INC) blas3.c -o blas3 $(CBLAS_LIB)
+	$(CC) $(CBLAS_INC) jacobi_iteration.c -o jacobi_iteration $(CBLAS_LIB)
+	$(CC) $(CBLAS_INC) power_eig.c -o power_eig $(CBLAS_LIB)
+
+mycuda: mycuda.h mycuda.c
+	$(CC) $(CUDA_INC) -c mycuda.c -o mycuda.o
+
+gpu: matvec_mul_cublas.c matvec_mul_magma.c linear_eq_magma.c lapack_dgeev_magma.c bicgstab_csr_cusparse.c mycuda get_sec tkaux
+	$(NVCC) $(CBLAS_INC) -c mycuda_daxpy.cu
+	$(CC) mycuda_daxpy.o mycuda.o tkaux.o -o mycuda_daxpy $(CBLAS_LIB) $(CUDA_LIB)
+	$(CC) $(LAPACKE_INC) $(CUDA_INC) matvec_mul_cublas.c -o matvec_mul_cublas mycuda.o $(LAPACKE_LIB) $(CUDA_LIB)
+	$(CC) $(LAPACKE_INC) $(CUDA_INC) $(MAGMA_INC) matvec_mul_magma.c -o matvec_mul_magma mycuda.o $(LAPACKE_LIB) $(MAGMA_LIB) $(CUDA_LIB) $(IMKL_LIB)
+	$(CC) $(LAPACKE_INC) $(CUDA_INC) $(MAGMA_INC) matvec_mul_magma_pure.c -o matvec_mul_magma_pure $(LAPACKE_LIB) $(MAGMA_LIB) $(CUDA_LIB) $(IMKL_LIB)
+	$(CC) $(LAPACKE_INC) $(CUDA_INC) $(MAGMA_INC) linear_eq_magma.c -o linear_eq_magma $(LAPACKE_LIB) $(MAGMA_LIB) $(CUDA_LIB) $(IMKL_LIB)
+	$(CC) $(LAPACKE_INC) $(CUDA_INC) $(MAGMA_INC) -DUSE_MAGMA lapack_dgeev_magma.c tkaux.o -o lapack_dgeev_magma $(LAPACKE_LIB) $(MAGMA_LIB) $(CUDA_LIB) $(IMKL_LIB)
+	$(CC) $(CUDA_INC) $(CBLAS_INC) bicgstab_csr_cusparse.c mm/matrix_market_io.c tkaux.o get_sec.o mycuda.o -o bicgstab_csr_cusparse $(CUDA_LIB) $(CBLAS_LIB)
+
+row_column_major: row_column_major.c complex_row_column_major.c lapack_complex_row_column_major.c
+	$(CC) $(INC) row_column_major.c -o row_column_major $(LAPACKE_LIB)
+	$(CC) $(INC) complex_row_column_major.c -o complex_row_column_major $(LAPACKE_LIB)
+	$(CC) $(INC) $(LAPACKE_INC) lapack_complex_row_column_major.c -o lapack_complex_row_column_major $(LAPACKE_LIB)
+
+dgecon: lapack_dgecon.c lapack_lamch.c
+	$(CC) $(INC) $(LAPACKE_INC) lapack_dgecon.c -o lapack_dgecon $(LAPACKE_LIB) $(CBLAS_LIB)
+	$(CC) $(INC) $(LAPACKE_INC) lapack_lamch.c -o lapack_lamch $(LAPACKE_LIB) $(CBLAS_LIB)
+
+eig: lapack_dgeev.c lapack_dsyev.c lapack_ssyev.c tkaux
+	$(CC) $(LAPACKE_INC) lapack_dgeev.c tkaux.o -o lapack_dgeev $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) lapack_dsyev.c -o lapack_dsyev $(LAPACKE_LIB)
+	$(CC) $(LAPACKE_INC) lapack_ssyev.c -o lapack_ssyev $(LAPACKE_LIB)
+
+spblas: jacobi_iteration_mkl.c jacobi_iteration_csr_mkl.c bicgstab_mkl.c bicgstab_csr_mkl.c tkaux
+	$(CC) $(IMKL_INC) -DUSE_IMKL jacobi_iteration_mkl.c mm/matrix_market_io.c -o jacobi_iteration_mkl tkaux.o $(IMKL_LIB)
+	$(CC) $(IMKL_INC) -DUSE_IMKL jacobi_iteration_csr_mkl.c mm/matrix_market_io.c -o jacobi_iteration_csr_mkl tkaux.o $(IMKL_LIB)
+	$(CC) $(IMKL_INC) -DUSE_IMKL bicgstab_mkl.c mm/matrix_market_io.c -o bicgstab_mkl tkaux.o $(IMKL_LIB)
+	$(CC) $(IMKL_INC) -DUSE_IMKL bicgstab_csr_mkl.c mm/matrix_market_io.c -o bicgstab_csr_mkl tkaux.o $(IMKL_LIB)
+
+openmp: my_matvec_mul.c my_linear_eq_omp.c
+	$(CC) $(OPENMP) $(CBLAS_INC) my_matvec_mul.c -o my_matvec_mul_omp $(CBLAS_LIB)
+	$(CC) $(OPENMP) $(CBLAS_INC) my_linear_eq_omp.c -o my_linear_eq_omp $(CBLAS_LIB)
+
+pthread: my_matvec_mul_pt.c
+	$(CC) $(CBLAS_INC) my_matvec_mul_pt.c -o my_matvec_mul_pt $(CBLAS_LIB) -lpthread
+
+clean:
+	-rm *.o
+	-rm first
+	-rm complex_first
+	-rm complex_first_cpp
+	-rm matvec_mul
+	-rm my_matvec_mul
+	-rm complex_matvec_mul
+	-rm linear_eq
+	-rm linear_eq_dgetrf
+	-rm linear_eq_dgbsv
+	-rm linear_eq_dsysv
+	-rm linear_eq_dsgesv
+	-rm linear_eq_dsposv
+	-rm my_linear_eq
+	-rm invpower_eig
+	-rm blas1
+	-rm blas1_norm
+	-rm blas2
+	-rm blas3
+	-rm jacobi_iteration
+	-rm power_eig
+	-rm mycuda_daxpy
+	-rm matvec_mul_cublas
+	-rm matvec_mul_magma
+	-rm matvec_mul_magma_pure
+	-rm linear_eq_magma
+	-rm lapack_dgeev_magma
+	-rm bicgstab_csr_cusparse
+	-rm row_column_major
+	-rm complex_row_column_major
+	-rm lapack_complex_row_column_major
+	-rm lapack_dgecon
+	-rm lapack_lamch
+	-rm lapack_dgeev
+	-rm lapack_dsyev
+	-rm lapack_ssyev
+	-rm jacobi_iteration_mkl
+	-rm jacobi_iteration_csr_mkl
+	-rm bicgstab_mkl
+	-rm bicgstab_csr_mkl
+	-rm my_matvec_mul_omp
+	-rm my_linear_eq_omp
+	-rm my_matvec_mul_pt
+
+tarzip:
+	-rm ../lapack-dist.tar.gz
+	(cd ../; tar zcvf lapack-dist.tar.gz lapack-dist/*.txt lapack-dist/*.h lapack-dist/*.c lapack-dist/*.cc lapack-dist/Makefile lapack-dist/*.cu lapack-dist/*.inc lapack-dist/mm/*.h lapack-dist/mm/*.c lapack-dist/mm/*.mtx lapack-dist/integral_eq/*.c lapack-dist/integral_eq/Makefile lapack-dist/integral_eq/*.h; cd lapack-dist;)
+
+zip:
+	-rm ../lapack-dist.zip
+	(cd ../; zip -ll -v lapack-dist.zip lapack-dist/*.txt lapack-dist/*.h lapack-dist/*.c lapack-dist/*.cc lapack-dist/Makefile.* lapack-dist/*.cu lapack-dist/*.inc lapack-dist/mm/*.h lapack-dist/mm/*.c lapack-dist/mm/*.mtx lapack-dist/integral_eq/*.c lapack-dist/integral_eq/Makefile.* lapack-dist/integral_eq/*.h; cd ./lapack-dist)
+
