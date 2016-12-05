@@ -19,9 +19,11 @@ gauss_integral: get_secv gauss_integral.c iteration.c ../tkaux.c ../tkaux.h
 	$(CC) $(LAPACKE_INC) -I../ -c ../tkaux.c -o tkaux.o
 	$(CC) $(LAPACKE_INC) -I../ -c gauss_integral.c -o gauss_integral.o
 	$(CC) $(LAPACKE_INC) -I../ iteration.c gauss_integral.o tkaux.o get_sec.o -o secant $(LAPACKE_LIB)
+	$(CC) -DUSE_NEW_SECANT $(LAPACKE_INC) -I../ iteration.c gauss_integral.o tkaux.o get_sec.o -o new_secant $(LAPACKE_LIB)
+
+gauss_integral_imkl: get_secv gauss_integral.c iteration.c ../tkaux.c ../tkaux.h
 	$(CC) $(OPENMP) -DUSE_IMKL $(IMKL_INC) -I../ iteration.c gauss_integral.o tkaux.o get_sec.o -o secant_imkl $(IMKL_LIB)
 	$(CC) -DUSE_PARALLEL_DIFFMAT $(OPENMP) -DUSE_IMKL $(IMKL_INC) -I../ iteration.c gauss_integral.o tkaux.o get_sec.o -o secant_imkl_pd $(IMKL_LIB)
-	$(CC) -DUSE_NEW_SECANT $(LAPACKE_INC) -I../ iteration.c gauss_integral.o tkaux.o get_sec.o -o new_secant $(LAPACKE_LIB)
 	$(CC) -DUSE_NEW_SECANT $(OPENMP) -DUSE_IMKL $(IMKL_INC) -I../ iteration.c gauss_integral.o tkaux.o get_sec.o -o new_secant_imkl $(IMKL_LIB)
 	$(CC) -DUSE_PARALLEL_DIFFMAT -DUSE_NEW_SECANT $(OPENMP) -DUSE_IMKL $(IMKL_INC) -I../ iteration.c gauss_integral.o tkaux.o get_sec.o -o new_secant_imkl_pd $(IMKL_LIB)
 

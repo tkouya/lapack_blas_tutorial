@@ -18,20 +18,13 @@ CUDA_INC = -I/usr/local/cuda/include
 CUDA_LIB = -L/usr/local/cuda/lib64 -lcusparse -lcublas -lcudart -lpthread -ldl
 
 # MAGMA 1.5.0 to 1.6.2
-#MAGMA_INC = -I/home/tkouya/pool/magma/magma-1.5.0/include
-#MAGMA_LIB = -L/home/tkouya/pool/magma/magma-1.5.0/lib -lmagma
-#MAGMA_INC = -I/home/tkouya/pool/magma/magma-1.6.0/include -I/home/tkouya/pool/magma/magma-1.6.1/sparse-iter/include -DADD_
-#MAGMA_LIB = -L/home/tkouya/pool/magma/magma-1.6.0/lib -lmagma_sparse -lmagma
-#MAGMA_INC = -I/home/tkouya/pool/lapack/magma-1.6.0/include
-#MAGMA_LIB = -L/home/tkouya/pool/lapack/magma-1.6.0/lib -lmagma
-#MAGMA_INC = -I/home/tkouya/pool/magma/magma-1.6.1/include -I/home/tkouya/pool/magma/magma-1.6.1/sparse-iter/include -O3 -fPIC -DADD_ -Wall -openmp -DMAGMA_SETAFFINITY -DMAGMA_WITH_MKL
-#MAGMA_LIB = -L/home/tkouya/pool/magma/magma-1.6.1/lib -lmagma_sparse -lmagma
-MAGMA_INC = -I/home/tkouya/pool/lapack/magma-1.6.2/include -I/home/tkouya/pool/lapack/magma-1.6.2/sparse-iter/include -O3 -fPIC -DADD_ -Wall -openmp -DMAGMA_SETAFFINITY -DMAGMA_WITH_MKL
-MAGMA_LIB = -L/home/tkouya/pool/lapack/magma-1.6.2/lib -lmagma_sparse -lmagma
+MAGMA_INC = -I/usr/local/magma/include -I/usr/local/magma/include/sparse-iter/include -O3 -fPIC -DADD_ -Wall -openmp -DMAGMA_SETAFFINITY -DMAGMA_WITH_MKL
+MAGMA_LIB = -L/usr/local/magma/lib -lmagma_sparse -lmagma -lstdc++ -lgomp
 
 # ------------------------ end of configuration --------------------------
 
-all: first matvec_mul linear_eq blas row_column_major gpu eig spblas dgecon openmp pthread
+all: first matvec_mul linear_eq blas row_column_major gpu eig dgecon openmp pthread
+#all: first matvec_mul linear_eq blas row_column_major gpu eig dgecon openmp pthread spblas_mkl
 
 get_sec: get_secv.h get_sec.c
 	$(CC) -c get_sec.c -o get_sec.o
@@ -94,7 +87,8 @@ eig: lapack_dgeev.c lapack_dsyev.c lapack_ssyev.c tkaux
 	$(CC) $(LAPACKE_INC) lapack_dsyev.c -o lapack_dsyev $(LAPACKE_LIB)
 	$(CC) $(LAPACKE_INC) lapack_ssyev.c -o lapack_ssyev $(LAPACKE_LIB)
 
-spblas: jacobi_iteration_mkl.c jacobi_iteration_csr_mkl.c bicgstab_mkl.c bicgstab_csr_mkl.c tkaux
+# need IMKL!
+spblas_mkl: jacobi_iteration_mkl.c jacobi_iteration_csr_mkl.c bicgstab_mkl.c bicgstab_csr_mkl.c tkaux
 	$(CC) $(IMKL_INC) -DUSE_IMKL jacobi_iteration_mkl.c mm/matrix_market_io.c -o jacobi_iteration_mkl tkaux.o $(IMKL_LIB)
 	$(CC) $(IMKL_INC) -DUSE_IMKL jacobi_iteration_csr_mkl.c mm/matrix_market_io.c -o jacobi_iteration_csr_mkl tkaux.o $(IMKL_LIB)
 	$(CC) $(IMKL_INC) -DUSE_IMKL bicgstab_mkl.c mm/matrix_market_io.c -o bicgstab_mkl tkaux.o $(IMKL_LIB)
