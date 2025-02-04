@@ -2,10 +2,11 @@
 /* LAPACK/BLAS Tutorial                          */
 /* Sample Program of DSYEV                       */
 /*                        with Intel Math Kernel */
-/* Last Update: 2013-08-06 (Tue) T.Kouya         */
+/* Last Update: 2025-02-04 (Tue) T.Kouya         */
 /*************************************************/
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h> // 2025-02-04(Tue)
 #include "cblas.h"
 #include "lapacke.h"
 

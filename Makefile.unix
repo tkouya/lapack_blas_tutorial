@@ -4,8 +4,11 @@
 # Last Update: 2016-12-02 (Fri) T.Kouya           #
 #*************************************************#
 # ------------------------ start of configuration --------------------------
-# Intel C compiler
-include lapack_icc.inc
+# Intel C compiler (Old)
+#include lapack_icc.inc
+
+# Intel OneAPI (New)
+include lapack_icx.inc
 
 # GNU Compiler Collection
 #include lapack_gcc.inc
@@ -23,7 +26,7 @@ MAGMA_LIB = -L/usr/local/magma/lib -lmagma_sparse -lmagma -lstdc++ -lgomp
 
 # ------------------------ end of configuration --------------------------
 
-all: first matvec_mul linear_eq blas row_column_major gpu eig dgecon openmp pthread
+all: first matvec_mul linear_eq blas row_column_major eig dgecon openmp pthread
 #all: first matvec_mul linear_eq blas row_column_major gpu eig dgecon openmp pthread spblas_mkl
 
 get_sec: get_secv.h get_sec.c

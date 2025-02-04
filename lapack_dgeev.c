@@ -2,12 +2,13 @@
 /* LAPACK/BLAS Tutorial                          */
 /* Sample Program of DGEEV                       */
 /*                        with Intel Math Kernel */
-/* Last Update: 2013-01-16 (Wed) T.Kouya         */
+/* Last Update: 2025-02-05 (Tue) T.Kouya         */
 /*************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include "cblas.h"
 #include "lapacke.h"
+#include "tkaux.h" // 2025-02-04(Tue)
 
 int main()
 {

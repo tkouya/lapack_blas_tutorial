@@ -2,11 +2,12 @@
 /* LAPACK/BLAS Tutorial                          */
 /* Multiplication of matrix and vector           */
 /*                                  with Pthread */
-/* Last Update: 2016-11-30 (Wed) T.Kouya         */
+/* Last Update: 2025-02-04 (Tue) T.Kouya         */
 /*************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <pthread.h> // 2025-02-04 (Tue)
 
 // rowwise only
 // my_matvec_mul: vec_b := mat_a * vec_x
@@ -38,7 +39,8 @@ typedef struct {
 } packed_my_matvec_mul_t; 
 
 /* parallelized computation */
-void thread_my_matvec_mul(void *arg_org)
+//void thread_my_matvec_mul(void *arg_org)
+void * thread_my_matvec_mul(void *arg_org) // 2025-02-04(Tue)
 {
 	packed_my_matvec_mul_t *arg;
 	int i, j, row_index, row_dim, col_dim;
@@ -66,6 +68,7 @@ void thread_my_matvec_mul(void *arg_org)
 #ifdef DEBUG
 	printf("End thread No.%d/%d\n", arg->thread_index, arg->num_threads);
 #endif
+	return NULL; // 2025-02-04(Tue)
 }
 
 // Parallelized LU
